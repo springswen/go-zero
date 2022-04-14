@@ -26,6 +26,7 @@ type engine struct {
 	conf                 RestConf
 	routes               []featuredRoutes
 	unauthorizedCallback handler.UnauthorizedCallback
+	blacklistCallback    handler.BlacklistCallback
 	unsignedCallback     handler.UnsignedCallback
 	middlewares          []Middleware
 	shedder              load.Shedder
@@ -53,6 +54,10 @@ func (s *engine) SetUnauthorizedCallback(callback handler.UnauthorizedCallback) 
 	s.unauthorizedCallback = callback
 }
 
+func (s *engine) SetBlacklistCallback(callback handler.BlacklistCallback) {
+	s.blacklistCallback = callback
+}
+
 func (s *engine) SetUnsignedCallback(callback handler.UnsignedCallback) {
 	s.unsignedCallback = callback
 }
@@ -78,10 +83,12 @@ func (s *engine) appendAuthHandler(fr featuredRoutes, chain alice.Chain,
 	if fr.jwt.enabled {
 		if len(fr.jwt.prevSecret) == 0 {
 			chain = chain.Append(handler.Authorize(fr.jwt.secret,
+				handler.WithBlacklistCallback(s.blacklistCallback),
 				handler.WithUnauthorizedCallback(s.unauthorizedCallback)))
 		} else {
 			chain = chain.Append(handler.Authorize(fr.jwt.secret,
 				handler.WithPrevSecret(fr.jwt.prevSecret),
+				handler.WithBlacklistCallback(s.blacklistCallback),
 				handler.WithUnauthorizedCallback(s.unauthorizedCallback)))
 		}
 	}

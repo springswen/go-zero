@@ -186,6 +186,12 @@ func WithSignature(signature SignatureConf) RouteOption {
 	}
 }
 
+func WithBlacklistCallback(callback handler.BlacklistCallback) RunOption {
+	return func(engine *Server) {
+		engine.ngin.SetBlacklistCallback(callback)
+	}
+}
+
 // WithUnauthorizedCallback returns a RunOption that with given unauthorized callback set.
 func WithUnauthorizedCallback(callback handler.UnauthorizedCallback) RunOption {
 	return func(engine *Server) {
