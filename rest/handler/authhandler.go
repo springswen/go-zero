@@ -81,13 +81,13 @@ func Authorize(secret string, opts ...AuthorizeOption) func(http.Handler) http.H
 					return
 				}
 
-				jwtExpire, ok := claims[jwtExpire].(float64)
+				jwtExpire, ok := claims[jwtExpire].(int64)
 				if !ok {
 					logx.Errorf("Authorize jwtExpire:%+v", jwtExpire)
 					unauthorized(w, r, errNoClaims, authOpts.Callback)
 					return
 				}
-				if authOpts.Blacklist(jwtId, int64(jwtExpire)) {
+				if authOpts.Blacklist(jwtId, jwtExpire) {
 					unauthorized(w, r, errInvalidToken, authOpts.Callback)
 					return
 				}
