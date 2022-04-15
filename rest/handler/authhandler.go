@@ -3,6 +3,7 @@ package handler
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"net"
 	"net/http"
@@ -37,7 +38,7 @@ type (
 		Blacklist  BlacklistCallback
 	}
 
-	BlacklistCallback func(jwtId string, jwtExpire int64) bool
+	BlacklistCallback func(jwtId string, userId int64) bool
 	// UnauthorizedCallback defines the method of unauthorized callback.
 	UnauthorizedCallback func(w http.ResponseWriter, r *http.Request, err error)
 	// AuthorizeOption defines the method to customize an AuthorizeOptions.
@@ -72,7 +73,22 @@ func Authorize(secret string, opts ...AuthorizeOption) func(http.Handler) http.H
 			}
 
 			if authOpts.Blacklist != nil {
-				logx.Infof("Authorize claims:%+v", claims)
+				var ty, k int64
+				switch v := claims[jwtExpire].(type) {
+				case int64:
+					ty = v
+					k = 1
+				case float64:
+					ty = int64(v)
+					k = 2
+				case json.Number:
+					ty, _ = v.Int64()
+					k = 3
+				default:
+					k = 4
+				}
+
+				logx.Infof("Authorize k:%d ty:%d claims:%+v", k, ty, claims)
 
 				jwtId, ok := claims[jwtId].(string)
 				if !ok {
@@ -81,13 +97,14 @@ func Authorize(secret string, opts ...AuthorizeOption) func(http.Handler) http.H
 					return
 				}
 
-				jwtExpire, ok := claims[jwtExpire].(int64)
-				if !ok {
-					logx.Errorf("Authorize jwtExpire:%+v", jwtExpire)
+				userId, err := claims["userId"].(json.Number).Int64()
+				if err != nil {
+					logx.Errorf("Authorize userId:%+v", userId)
 					unauthorized(w, r, errNoClaims, authOpts.Callback)
 					return
 				}
-				if authOpts.Blacklist(jwtId, jwtExpire) {
+
+				if authOpts.Blacklist(jwtId, userId) {
 					unauthorized(w, r, errInvalidToken, authOpts.Callback)
 					return
 				}
