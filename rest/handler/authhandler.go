@@ -73,22 +73,22 @@ func Authorize(secret string, opts ...AuthorizeOption) func(http.Handler) http.H
 			}
 
 			if authOpts.Blacklist != nil {
-				var ty, k int64
-				switch v := claims[jwtExpire].(type) {
-				case int64:
-					ty = v
-					k = 1
-				case float64:
-					ty = int64(v)
-					k = 2
-				case json.Number:
-					ty, _ = v.Int64()
-					k = 3
-				default:
-					k = 4
-				}
+				// var ty, k int64
+				// switch v := claims[jwtExpire].(type) {
+				// case int64:
+				// 	ty = v
+				// 	k = 1
+				// case float64:
+				// 	ty = int64(v)
+				// 	k = 2
+				// case json.Number:
+				// 	ty, _ = v.Int64()
+				// 	k = 3
+				// default:
+				// 	k = 4
+				// }
 
-				logx.Infof("Authorize k:%d ty:%d claims:%+v", k, ty, claims)
+				// logx.Infof("Authorize k:%d ty:%d claims:%+v", k, ty, claims)
 
 				jwtId, ok := claims[jwtId].(string)
 				if !ok {
